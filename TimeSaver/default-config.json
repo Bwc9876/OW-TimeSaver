@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "settings": {
+    "skipSplash": true,
+    "skipDeathSequence": true,
+    "suppressSlate": true,
+    "alwaysStartWithSuit": false
+  }
+}
