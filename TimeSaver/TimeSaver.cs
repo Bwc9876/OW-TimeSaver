@@ -20,10 +20,10 @@ namespace TimeSaver
         {
             _settings = new TimeSaverSettings
             {
-                SkipSplash = config.GetSettingsValue<bool>("skipSplash"),
-                SkipDeathSequence = config.GetSettingsValue<bool>("skipDeathSequence"),
-                SuppressSlate = config.GetSettingsValue<bool>("suppressSlate"),
-                AlwaysStartWithSuit = config.GetSettingsValue<bool>("alwaysStartWithSuit")
+                SkipSplash = config.GetSettingsValue<bool>("Skip Splash"),
+                SkipDeathSequence = config.GetSettingsValue<bool>("Skip Death Sequence"),
+                SuppressSlate = config.GetSettingsValue<bool>("Suppress Slate"),
+                AlwaysStartWithSuit = config.GetSettingsValue<bool>("Always Start With Suit")
             };
         }
 
@@ -51,7 +51,10 @@ namespace TimeSaver
             }
             ModHelper.HarmonyHelper.AddPrefix<RemoteDialogueTrigger>("ConversationTriggered", typeof(TimeSaver), nameof(RemoteDialogueTriggerConvoTriggered));
             ModHelper.HarmonyHelper.AddPostfix<Flashback>("OnTriggerFlashback", typeof(TimeSaver), nameof(FlashBackGo));
-            GlobalMessenger.AddListener("WakeUp", OnWakeUpTimeFoSchoo);
+            GlobalMessenger.AddListener("WakeUp", () =>
+            {
+                ModHelper.Events.Unity.FireOnNextUpdate(OnWakeUpTimeFoSchoo);
+            });
         }
 
         private static void OnWakeUpTimeFoSchoo()
