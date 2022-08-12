@@ -59,7 +59,7 @@ namespace TimeSaver
 
         private static void OnWakeUpTimeFoSchoo()
         {
-            if (Instance._settings.AlwaysStartWithSuit)
+            if (Instance._settings.AlwaysStartWithSuit && !Instance.ModHelper.Interaction.ModExists("Raicuparta.QuantumSpaceBuddies"))
             {
                 var pickup = GameObject.Find("Ship_Body/Module_Supplies/Systems_Supplies/ExpeditionGear").GetComponent<SuitPickupVolume>();
                 pickup.OnPressInteract(pickup._interactVolume.GetInteractionAt(0).inputCommand); 
@@ -68,7 +68,7 @@ namespace TimeSaver
 
         public static void FlashBackGo(Flashback __instance)
         {
-            if (Instance._settings.SkipDeathSequence && !Instance.ModHelper.Interaction.ModExists("Raicuparta.QuantumSpaceBuddies"))
+            if (Instance._settings.SkipDeathSequence)
             {
                 __instance._flashbackTimer.endTime = __instance._flashbackTimer.startTime;
             }
