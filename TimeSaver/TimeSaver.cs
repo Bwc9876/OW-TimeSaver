@@ -68,7 +68,7 @@ namespace TimeSaver
 
         public static void FlashBackGo(Flashback __instance)
         {
-            if (Instance._settings.SkipDeathSequence)
+            if (Instance._settings.SkipDeathSequence && !Instance.ModHelper.Interaction.ModExists("Raicuparta.QuantumSpaceBuddies"))
             {
                 __instance._flashbackTimer.endTime = __instance._flashbackTimer.startTime;
             }
