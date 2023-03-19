@@ -13,7 +13,7 @@ namespace TimeSaver
         
         private struct TimeSaverSettings
         {
-            public bool SkipSplash, SkipDeathSequence, SuppressSlate, AlwaysStartWithSuit, SkipStartupPopup;
+            public bool SkipSplash, SkipDeathSequence, SuppressSlate, AlwaysStartWithSuit, SkipStartupPopup, SkipCredits, SkipPostCredits;
         }
 
         private TimeSaverSettings _settings;
@@ -27,7 +27,9 @@ namespace TimeSaver
                 SkipDeathSequence = config.GetSettingsValue<bool>("Skip Death Sequence"),
                 SuppressSlate = config.GetSettingsValue<bool>("Suppress Slate"),
                 AlwaysStartWithSuit = config.GetSettingsValue<bool>("Always Start With Suit"),
-                SkipStartupPopup = config.GetSettingsValue<bool>("Skip Startup Popups")
+                SkipStartupPopup = config.GetSettingsValue<bool>("Skip Startup Popups"),
+                SkipCredits = config.GetSettingsValue<bool>("Skip Credits"),
+                SkipPostCredits = config.GetSettingsValue<bool>("Skip Post Credits")
             };
         }
 
@@ -39,21 +41,8 @@ namespace TimeSaver
         private void Start()
         {
             QSBEnabled = Instance.ModHelper.Interaction.ModExists("Raicuparta.QuantumSpaceBuddies");
-            if (_settings.SkipSplash)
-            {
-                var titleScreenAnimation = FindObjectOfType<TitleScreenAnimation>();
-                titleScreenAnimation._fadeDuration = 0;
-                titleScreenAnimation._gamepadSplash = false;
-                titleScreenAnimation._introPan = false;
-                titleScreenAnimation.Invoke("FadeInTitleLogo");
-                
-                var titleAnimationController = FindObjectOfType<TitleAnimationController>();
-                titleAnimationController._logoFadeDelay = 0.001f;
-                titleAnimationController._logoFadeDuration = 0.001f;
-                titleAnimationController._optionsFadeDelay = 0.001f;
-                titleAnimationController._optionsFadeDuration = 0.001f;
-                titleAnimationController._optionsFadeSpacing = 0.001f;
-            }
+            SkipSplash();
+            ModHelper.HarmonyHelper.AddPrefix<TitleScreenAnimation>("Awake", typeof(TimeSaver), nameof(SkipSplash));
             ModHelper.HarmonyHelper.AddPrefix<RemoteDialogueTrigger>("ConversationTriggered", typeof(TimeSaver), nameof(RemoteDialogueTriggerConvoTriggered));
             ModHelper.HarmonyHelper.AddPostfix<Flashback>("OnTriggerFlashback", typeof(TimeSaver), nameof(FlashBackGo));
             GlobalMessenger.AddListener("WakeUp", () =>
@@ -68,6 +57,27 @@ namespace TimeSaver
             else
             {
                 Instance.ModHelper.HarmonyHelper.AddPostfix<TitleScreenManager>("TryShowStartupPopupsAndShowMenu", typeof(TimeSaver), nameof(TitleScreenManagerTryShowThingies));
+            }
+            ModHelper.HarmonyHelper.AddPostfix<Credits>("Start", typeof(TimeSaver), nameof(SkipCredits));
+            ModHelper.HarmonyHelper.AddPostfix<PostCreditsManager>("Start", typeof(TimeSaver), nameof(SkipPostCredits));
+        }
+
+        private static void SkipSplash()
+        {
+            if (Instance._settings.SkipSplash)
+            {
+                var titleScreenAnimation = FindObjectOfType<TitleScreenAnimation>();
+                titleScreenAnimation._fadeDuration = 0;
+                titleScreenAnimation._gamepadSplash = false;
+                titleScreenAnimation._introPan = false;
+                titleScreenAnimation.Invoke("FadeInTitleLogo");
+
+                var titleAnimationController = FindObjectOfType<TitleAnimationController>();
+                titleAnimationController._logoFadeDelay = 0.001f;
+                titleAnimationController._logoFadeDuration = 0.001f;
+                titleAnimationController._optionsFadeDelay = 0.001f;
+                titleAnimationController._optionsFadeDuration = 0.001f;
+                titleAnimationController._optionsFadeSpacing = 0.001f;
             }
         }
 
@@ -106,6 +116,22 @@ namespace TimeSaver
             if (Instance._settings.SkipStartupPopup)
             {
                 __instance._okCancelPopup.InvokeOk();
+            }
+        }
+
+        public static void SkipCredits(Credits __instance)
+        {
+            if (Instance._settings.SkipCredits)
+            {
+                __instance.LoadNextScene();
+            }
+        }
+
+        public static void SkipPostCredits()
+        {
+            if (Instance._settings.SkipPostCredits)
+            {
+                LoadManager.LoadScene(OWScene.TitleScreen, LoadManager.FadeType.ToBlack, 0.5f);
             }
         }
     }

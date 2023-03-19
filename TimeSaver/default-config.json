@@ -5,6 +5,8 @@
     "Skip Death Sequence": true,
     "Suppress Slate": true,
     "Always Start With Suit": false,
-    "Skip Startup Popups": false
+    "Skip Startup Popups": false,
+    "Skip Credits": false,
+    "Skip Post Credits": false
   }
 }
