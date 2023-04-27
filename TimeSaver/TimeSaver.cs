@@ -1,16 +1,17 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using HarmonyLib;
 using OWML.Common;
 using OWML.ModHelper;
 using OWML.Utils;
+using System.Reflection;
 using UnityEngine;
 
 namespace TimeSaver
 {
+    [HarmonyPatch]
     public class TimeSaver : ModBehaviour
     {
         public static TimeSaver Instance;
-        
+
         private struct TimeSaverSettings
         {
             public bool SkipSplash, SkipDeathSequence, SuppressSlate, AlwaysStartWithSuit, SkipStartupPopup, SkipCredits, SkipPostCredits;
@@ -36,32 +37,20 @@ namespace TimeSaver
         private void Awake()
         {
             Instance = this;
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         }
 
         private void Start()
         {
             QSBEnabled = Instance.ModHelper.Interaction.ModExists("Raicuparta.QuantumSpaceBuddies");
             SkipSplash();
-            ModHelper.HarmonyHelper.AddPrefix<TitleScreenAnimation>("Awake", typeof(TimeSaver), nameof(SkipSplash));
-            ModHelper.HarmonyHelper.AddPrefix<RemoteDialogueTrigger>("ConversationTriggered", typeof(TimeSaver), nameof(RemoteDialogueTriggerConvoTriggered));
-            ModHelper.HarmonyHelper.AddPostfix<Flashback>("OnTriggerFlashback", typeof(TimeSaver), nameof(FlashBackGo));
             GlobalMessenger.AddListener("WakeUp", () =>
             {
                 ModHelper.Events.Unity.FireOnNextUpdate(OnWakeUpTimeFoSchoo);
             });
-            // Stolen from menu framework
-            if (typeof(TitleScreenManager).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Any(x => x.Name == "ShowStartupPopupsAndShowMenu"))
-            {
-                Instance.ModHelper.HarmonyHelper.AddPostfix<TitleScreenManager>(nameof(TitleScreenManager.ShowStartupPopupsAndShowMenu), typeof(TimeSaver), nameof(TitleScreenManagerTryShowThingies));
-            }
-            else
-            {
-                Instance.ModHelper.HarmonyHelper.AddPostfix<TitleScreenManager>("TryShowStartupPopupsAndShowMenu", typeof(TimeSaver), nameof(TitleScreenManagerTryShowThingies));
-            }
-            ModHelper.HarmonyHelper.AddPostfix<Credits>("Start", typeof(TimeSaver), nameof(SkipCredits));
-            ModHelper.HarmonyHelper.AddPostfix<PostCreditsManager>("Start", typeof(TimeSaver), nameof(SkipPostCredits));
         }
 
+        [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenAnimation), nameof(TitleScreenAnimation.Awake))]
         private static void SkipSplash()
         {
             if (Instance._settings.SkipSplash)
@@ -86,10 +75,11 @@ namespace TimeSaver
             if (Instance._settings.AlwaysStartWithSuit && !Instance.QSBEnabled)
             {
                 var pickup = GameObject.Find("Ship_Body/Module_Supplies/Systems_Supplies/ExpeditionGear").GetComponent<SuitPickupVolume>();
-                pickup.OnPressInteract(pickup._interactVolume.GetInteractionAt(0).inputCommand); 
+                pickup.OnPressInteract(pickup._interactVolume.GetInteractionAt(0).inputCommand);
             }
         }
 
+        [HarmonyPostfix, HarmonyPatch(typeof(Flashback), nameof(Flashback.OnTriggerFlashback))]
         public static void FlashBackGo(Flashback __instance)
         {
             if (Instance._settings.SkipDeathSequence && !Instance.QSBEnabled)
@@ -98,6 +88,7 @@ namespace TimeSaver
             }
         }
 
+        [HarmonyPrefix, HarmonyPatch(typeof(RemoteDialogueTrigger), nameof(RemoteDialogueTrigger.ConversationTriggered))]
         public static bool RemoteDialogueTriggerConvoTriggered(RemoteDialogueTrigger __instance, ref bool __result)
         {
             if (Instance._settings.SuppressSlate && __instance.gameObject.name == "2ndLoopConversation_Trigger")
@@ -111,6 +102,7 @@ namespace TimeSaver
             }
         }
 
+        [HarmonyPostfix, HarmonyPatch(typeof(TitleScreenManager), nameof(TitleScreenManager.TryShowStartupPopupsAndShowMenu))]
         public static void TitleScreenManagerTryShowThingies(TitleScreenManager __instance)
         {
             if (Instance._settings.SkipStartupPopup)
@@ -119,6 +111,7 @@ namespace TimeSaver
             }
         }
 
+        [HarmonyPostfix, HarmonyPatch(typeof(Credits), nameof(Credits.Start))]
         public static void SkipCredits(Credits __instance)
         {
             if (Instance._settings.SkipCredits)
@@ -127,6 +120,7 @@ namespace TimeSaver
             }
         }
 
+        [HarmonyPostfix, HarmonyPatch(typeof(PostCreditsManager), nameof(Credits.Start))]
         public static void SkipPostCredits()
         {
             if (Instance._settings.SkipPostCredits)
