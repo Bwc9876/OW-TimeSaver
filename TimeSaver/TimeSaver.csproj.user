@@ -1,5 +1,8 @@
 ﻿<Project>
-  <PropertyGroup>
-    <OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Bwc9876.TimeSaver</OutputPath>
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <OutputPath>$(AppData)/OuterWildsModManager/OWML/Mods/Bwc9876.TimeSaver</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)' == 'Unix'">
+    <OutputPath>$(HOME)/.local/share/OuterWildsModManager/OWML/Mods/Bwc9876.TimeSaver</OutputPath>
   </PropertyGroup>
 </Project>
